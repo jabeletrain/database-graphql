@@ -43,6 +43,24 @@ const CompanyType = new GraphQLObjectType({
     })
 });
 
+const UserCompanyType = new GraphQLObjectType({
+    name: 'UserCompany',
+    fields: () => ({
+        ID: { type: GraphQLInt },
+        NAME: { type: GraphQLString },
+        ADDRESS: { type: GraphQLString },
+        CITY: { type: GraphQLString },
+        ZIP_CODE: { type: GraphQLInt },
+        AGE: { type: GraphQLInt },
+        COMPANY_ID: {type: GraphQLInt },
+        COMPANY_NAME: { type: GraphQLString },
+        COMPANY_ADDRESS: { type: GraphQLString },
+        COMPANY_CITY: { type: GraphQLString },
+        COMPANY_ZIP_CODE: { type: GraphQLInt },
+        COMPANY_DESCRIPTION: { type: GraphQLString },
+    })
+});
+
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
@@ -54,7 +72,7 @@ const RootQuery = new GraphQLObjectType({
                     readIni();
                 }
 
-                let statement = `SELECT ID, NAME, ADDRESS, CITY, ZIP_CODE, AGE FROM USER_TAB WHERE ID = ${args.ID}`;
+                let statement = `SELECT ID, NAME, ADDRESS, CITY, ZIP_CODE, AGE, COMPANY_ID FROM USER_TAB WHERE ID = ${args.ID}`;
                 database.setConnectionInfo(databaseInfo.user, databaseInfo.password, databaseInfo.connection);
                 database.setReturn('OBJECT');
                 return database.databaseSELECT(statement)
@@ -71,6 +89,33 @@ const RootQuery = new GraphQLObjectType({
                 }
 
                 let statement = `SELECT ID, NAME, ADDRESS, CITY, ZIP_CODE, DESCRIPTION FROM COMPANY WHERE ID = ${args.ID}`;
+                database.setConnectionInfo(databaseInfo.user, databaseInfo.password, databaseInfo.connection);
+                database.setReturn('OBJECT');
+                return database.databaseSELECT(statement)
+                .then (results => results[0])
+                .catch(err => console.log ('The following error occurred', err));
+            }
+        },
+        usercompany: {
+            type: UserCompanyType,
+            args: { ID: { type: GraphQLInt }},
+            resolve(parentValue, args) {
+                if (databaseInfo.user === null) {
+                    readIni();
+                }
+
+                let statement = `SELECT USER_TAB.ID, 
+                                        USER_TAB.NAME, 
+                                        USER_TAB.ADDRESS, 
+                                        USER_TAB.CITY, 
+                                        USER_TAB.ZIP_CODE, 
+                                        USER_TAB.COMPANY_ID, 
+                                        COMPANY.NAME AS COMPANY_NAME,
+                                        COMPANY.ADDRESS AS COMPANY_ADDRESS,
+                                        COMPANY.CITY AS COMPANY_CITY,
+                                        COMPANY.ZIP_CODE AS COMPANY_ZIP_CODE,
+                                        COMPANY.DESCRIPTION AS COMPANY_DESCRIPTION
+                                 FROM USER_TAB, COMPANY WHERE COMPANY_ID = COMPANY.ID AND USER_TAB.ID = ${args.ID}`;
                 database.setConnectionInfo(databaseInfo.user, databaseInfo.password, databaseInfo.connection);
                 database.setReturn('OBJECT');
                 return database.databaseSELECT(statement)
